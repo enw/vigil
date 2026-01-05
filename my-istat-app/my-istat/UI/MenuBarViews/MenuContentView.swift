@@ -7,44 +7,65 @@ struct MenuContentView: View {
         VStack(alignment: .leading, spacing: 12) {
             // CPU Section
             if let cpu = metricsProvider.cpuMetrics {
-                MenuSectionView(title: "CPU", value: cpu.usagePercentage)
-                    .onTapGesture {
-                        NSApp.sendAction(#selector(PreferencesWindow.show), to: nil, from: nil)
-                    }
+                MetricSectionView(
+                    title: "CPU",
+                    value: cpu.usagePercentage,
+                    details: [
+                        "Cores: \(cpu.processorCount)",
+                        "Load: \(String(format: "%.2f", cpu.loadAverage.one))",
+                        "Uptime: \(cpu.formattedUptime)"
+                    ]
+                )
+            } else {
+                Text("Loading CPU metrics...")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
             }
 
             // Memory Section
             if let memory = metricsProvider.memoryMetrics {
-                MenuSectionView(
+                MetricSectionView(
                     title: "Memory",
-                    value: String(format: "%.1f%%", memory.usedPercentage)
+                    value: memory.usagePercentage,
+                    details: [
+                        "Used: \(memory.formattedUsed)",
+                        "Total: \(memory.formattedTotal)",
+                        "Free: \(memory.formattedFree)"
+                    ]
                 )
+            } else {
+                Text("Loading memory metrics...")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
             }
 
             Divider()
+                .padding(.vertical, 4)
 
             // Quick Actions
-            Button("Open in Activity Monitor") {
-                NSWorkspace.shared.launchApplication("Activity Monitor")
-            }
-            .font(.system(size: 11))
+            VStack(alignment: .leading, spacing: 6) {
+                Button(action: { NSWorkspace.shared.launchApplication("Activity Monitor") }) {
+                    Label("Activity Monitor", systemImage: "list.dash")
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 11))
 
-            Button("Preferences...") {
-                NSApp.sendAction(
-                    #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
-                    to: NSApp,
-                    from: nil
-                )
-            }
-            .font(.system(size: 11))
+                Button(action: { NSApp.activate(ignoringOtherApps: true) }) {
+                    Label("Preferences", systemImage: "gear")
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 11))
 
-            Button("Quit cavestat") {
-                NSApplication.shared.terminate(nil)
+                Button(action: { NSApplication.shared.terminate(nil) }) {
+                    Label("Quit cavestat", systemImage: "power")
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 11))
+                .foregroundColor(.red)
             }
-            .font(.system(size: 11))
         }
         .padding()
-        .frame(width: 250)
+        .frame(width: 280)
         .onAppear {
             metricsProvider.start()
         }
@@ -54,28 +75,39 @@ struct MenuContentView: View {
     }
 }
 
-struct MenuSectionView: View {
+struct MetricSectionView: View {
     let title: String
     let value: String
+    let details: [String]
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.secondary)
-                Text(value)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.primary)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                    Text(value)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.primary)
+                }
+                Spacer()
+                Image(systemName: "chart.bar.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(.blue)
             }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundColor(.tertiary)
+
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(details, id: \.self) { detail in
+                    Text(detail)
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+            }
         }
-        .padding(8)
+        .padding(10)
         .background(Color(nsColor: .controlBackgroundColor))
-        .cornerRadius(4)
+        .cornerRadius(6)
     }
 }
 

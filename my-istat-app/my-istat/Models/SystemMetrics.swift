@@ -1,11 +1,10 @@
 import Foundation
 
 // MARK: - CPU Metrics
-struct CPUMetrics: Codable {
+struct CPUMetrics {
     let timestamp: Date
     let totalUsage: Double // 0-100
-    let coreUsages: [Double] // Per-core usage percentages
-    let frequency: [Double] // Per-core frequencies in GHz
+    let processorCount: Int
     let temperature: Double? // Celsius
     let loadAverage: (one: Double, five: Double, fifteen: Double)
     let uptime: TimeInterval
@@ -13,21 +12,32 @@ struct CPUMetrics: Codable {
     var usagePercentage: String {
         String(format: "%.1f%%", totalUsage)
     }
+
+    var formattedUptime: String {
+        let hours = Int(uptime) / 3600
+        let minutes = (Int(uptime) % 3600) / 60
+        return String(format: "%dh %dm", hours, minutes)
+    }
 }
 
 // MARK: - Memory Metrics
-struct MemoryMetrics: Codable {
+struct MemoryMetrics {
     let timestamp: Date
     let total: UInt64 // Bytes
     let used: UInt64
     let free: UInt64
+    let active: UInt64
+    let inactive: UInt64
+    let wired: UInt64
     let compressed: UInt64
-    let swapUsed: UInt64
-    let swapTotal: UInt64
-    let memoryPressure: Double // 0-100
 
     var usedPercentage: Double {
-        Double(used) / Double(total) * 100
+        guard total > 0 else { return 0 }
+        return Double(used) / Double(total) * 100
+    }
+
+    var usagePercentage: String {
+        String(format: "%.1f%%", usedPercentage)
     }
 
     var formattedUsed: String {
@@ -56,7 +66,9 @@ class SystemMetricsProvider: ObservableObject {
     @Published var isRunning = false
 
     private var updateTimer: Timer?
-    private let updateInterval: TimeInterval = 1.0 // Update every second
+    private let updateInterval: TimeInterval = 1.0
+    private let cpuMonitor = CPUMonitor()
+    private let memoryMonitor = MemoryMonitor()
 
     func start() {
         guard !isRunning else { return }
@@ -82,79 +94,33 @@ class SystemMetricsProvider: ObservableObject {
         memoryMetrics = fetchMemoryMetrics()
     }
 
-    private func fetchCPUMetrics() -> CPUMetrics? {
-        // TODO: Implement using IOKit
-        let processor_count = ProcessInfo.processInfo.processorCount
-        let loadAverage = getLoadAverage()
-        let uptime = getSystemUptime()
+    private func fetchCPUMetrics() -> CPUMetrics {
+        let usage = cpuMonitor.getCurrentCPUUsage()
+        let loadAverage = cpuMonitor.getLoadAverage()
+        let uptime = cpuMonitor.getSystemUptime()
 
         return CPUMetrics(
             timestamp: Date(),
-            totalUsage: Double.random(in: 10...50), // Placeholder
-            coreUsages: (0..<processor_count).map { _ in Double.random(in: 0...100) },
-            frequency: (0..<processor_count).map { _ in Double.random(in: 2.0...3.5) },
-            temperature: Double.random(in: 40...70),
+            totalUsage: usage,
+            processorCount: cpuMonitor.getProcessorCount(),
+            temperature: cpuMonitor.getThermalInfo(),
             loadAverage: loadAverage,
             uptime: uptime
         )
     }
 
-    private func fetchMemoryMetrics() -> MemoryMetrics? {
-        var pageSize: Int = 0
-        var vmStats = vm_statistics64_data_t()
-        var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64>.size / MemoryLayout<integer_t>.size)
-
-        let result = withUnsafeMutablePointer(to: &vmStats) {
-            $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
-                host_statistics64(
-                    mach_host_self(),
-                    HOST_VM_INFO64,
-                    $0,
-                    &count
-                )
-            }
-        }
-
-        guard result == KERN_SUCCESS else { return nil }
-
-        pageSize = Int(vm_page_size)
-        let total = UInt64(ProcessInfo.processInfo.physicalMemory)
-        let used = UInt64(vmStats.active_count + vmStats.wire_count) * UInt64(pageSize)
-        let free = UInt64(vmStats.free_count) * UInt64(pageSize)
-        let compressed = UInt64(vmStats.compressed_count) * UInt64(pageSize)
-
-        var swapUsed: UInt64 = 0
-        var swapTotal: UInt64 = 0
-        // TODO: Implement swap detection
-
-        let pressure = (Double(used) / Double(total)) * 100
+    private func fetchMemoryMetrics() -> MemoryMetrics {
+        let memory = memoryMonitor.getCurrentMemoryUsage()
 
         return MemoryMetrics(
             timestamp: Date(),
-            total: total,
-            used: used,
-            free: free,
-            compressed: compressed,
-            swapUsed: swapUsed,
-            swapTotal: swapTotal,
-            memoryPressure: pressure
+            total: memory.total,
+            used: memory.used,
+            free: memory.free,
+            active: memory.active,
+            inactive: memory.inactive,
+            wired: memory.wired,
+            compressed: memory.compressed
         )
-    }
-
-    private func getLoadAverage() -> (one: Double, five: Double, fifteen: Double) {
-        var loadavg: [Double] = [0, 0, 0]
-        getloadavg(&loadavg, 3)
-        return (loadavg[0], loadavg[1], loadavg[2])
-    }
-
-    private func getSystemUptime() -> TimeInterval {
-        var bootTime = timeval()
-        var bootTimeSize = MemoryLayout<timeval>.size
-        let result = sysctlbyname("kern.boottime", &bootTime, &bootTimeSize, nil, 0)
-
-        guard result == 0 else { return 0 }
-
-        let bootTimeInterval = TimeInterval(bootTime.tv_sec) + TimeInterval(bootTime.tv_usec) / 1_000_000
-        return Date().timeIntervalSince1970 - bootTimeInterval
     }
 }
