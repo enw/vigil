@@ -5,13 +5,13 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>cavestat</string>
+    <string>Vigil</string>
     <key>CFBundleIdentifier</key>
-    <string>com.local.cavestat</string>
+    <string>com.local.vigil</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>cavestat</string>
+    <string>Vigil</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

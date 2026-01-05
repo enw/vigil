@@ -57,7 +57,7 @@ struct MenuContentView: View {
                 .font(.system(size: 11))
 
                 Button(action: { NSApplication.shared.terminate(nil) }) {
-                    Label("Quit cavestat", systemImage: "power")
+                    Label("Quit Vigil", systemImage: "power")
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 11))

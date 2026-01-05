@@ -323,4 +323,4 @@ Three approaches considered:
 | Fan control | Display-only (v1), safe write access (Phase 2) | Simplicity + upgrade path |
 | Design assets | SF Symbols only | No custom icon design needed |
 | Testing focus | Apple Silicon primary | Current market focus |
-| App name | "cavestat" (or TBD) | Trademark-safe |
+| App name | "Vigil" | System monitoring watchdog |

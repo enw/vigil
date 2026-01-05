@@ -2,14 +2,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "cavestat",
+    name: "vigil",
     platforms: [
         .macOS(.v11)
     ],
     dependencies: [],
     targets: [
         .executableTarget(
-            name: "cavestat",
+            name: "vigil",
             dependencies: [],
             path: "my-istat",
             linkerSettings: [

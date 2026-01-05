@@ -1,10 +1,10 @@
-# cavestat
+# Vigil
 
 A lightweight macOS system monitoring application for the menu bar, inspired by iStat Menus.
 
 ## Overview
 
-cavestat displays real-time CPU and memory usage in your macOS menu bar with detailed dropdown panels showing historical graphs and system information.
+Vigil displays real-time CPU and memory usage in your macOS menu bar with detailed dropdown panels showing historical graphs and system information.
 
 ## Phase 1 MVP Features
 
@@ -61,15 +61,85 @@ my-istat-app/
 
 ## Building
 
+### Option 1: Using Swift Package Manager (Easiest)
+
 ```bash
 cd my-istat-app
-swift build
+swift build -c release
 ```
 
-## System Requirements
+The compiled binary will be at: `.build/release/vigil`
+
+### Option 2: Create Xcode Project
+
+If you want an Xcode project for development:
+
+```bash
+cd my-istat-app
+swift package generate-xcodeproj
+open vigil.xcodeproj
+```
+
+Then build using Xcode (Cmd+B) or the Product menu.
+
+### Option 3: Build & Run Directly
+
+```bash
+cd my-istat-app
+swift run vigil
+```
+
+### Option 4: Create Standalone App Bundle
+
+```bash
+cd my-istat-app
+mkdir -p build
+swift build -c release
+cp .build/release/vigil build/
+# Create Vigil.app structure (see below)
+```
+
+### Creating a Proper macOS App Bundle
+
+To create a distributable `.app` bundle:
+
+```bash
+#!/bin/bash
+cd my-istat-app
+
+# Build release binary
+swift build -c release
+
+# Create app structure
+APP_NAME="Vigil"
+APP_DIR="build/$APP_NAME.app/Contents"
+BINARY_PATH=".build/release/vigil"
+
+mkdir -p "$APP_DIR/MacOS"
+mkdir -p "$APP_DIR/Resources"
+
+# Copy binary
+cp "$BINARY_PATH" "$APP_DIR/MacOS/$APP_NAME"
+
+# Copy Info.plist
+cp my-istat/Info.plist "$APP_DIR/Info.plist"
+
+# Make it executable
+chmod +x "$APP_DIR/MacOS/$APP_NAME"
+
+echo "Created: build/$APP_NAME.app"
+```
+
+After creating the bundle, you can:
+- Double-click to launch
+- Move to `/Applications/` folder
+- Use `open build/Vigil.app` to run from terminal
+
+### System Requirements
 
 - macOS 11.0 (Big Sur) or later
-- Apple Silicon (primary) or Intel (supported)
+- Xcode 13+ (if using Xcode method)
+- Swift 5.9+
 
 ## Next Phases
 
@@ -82,7 +152,3 @@ See [SPECIFICATION.md](docs/SPECIFICATION.md) for detailed requirements and desi
 ## Licensing
 
 Free/open-source - MIT or Apache 2.0 (TBD)
-
-## App Name
-
-**cavestat** - A system monitoring utility for macOS menu bar
