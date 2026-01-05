@@ -64,12 +64,19 @@ struct MemoryMetrics {
 class SystemMetricsProvider: ObservableObject {
     @Published var cpuMetrics: CPUMetrics?
     @Published var memoryMetrics: MemoryMetrics?
+    @Published var networkMetrics: NetworkMonitor.NetworkInfo?
+    @Published var diskMetrics: DiskMonitor.DiskInfo?
+    @Published var batteryMetrics: BatteryMonitor.BatteryInfo?
     @Published var isRunning = false
 
     private var updateTimer: Timer?
     private let updateInterval: TimeInterval = 1.0
     private let cpuMonitor = CPUMonitor()
     private let memoryMonitor = MemoryMonitor()
+    private let networkMonitor = NetworkMonitor()
+    private let diskMonitor = DiskMonitor()
+    private let batteryMonitor = BatteryMonitor()
+    let alertManager = AlertManager()
 
     func start() {
         guard !isRunning else { return }
@@ -102,6 +109,24 @@ class SystemMetricsProvider: ObservableObject {
     private func updateMetrics() {
         cpuMetrics = fetchCPUMetrics()
         memoryMetrics = fetchMemoryMetrics()
+        networkMetrics = networkMonitor.getCurrentNetworkInfo()
+        diskMetrics = diskMonitor.getDiskInfo()
+        batteryMetrics = batteryMonitor.getBatteryInfo()
+
+        // Check alerts
+        if let cpu = cpuMetrics {
+            alertManager.checkCPUAlert(usage: cpu.totalUsage)
+        }
+        if let mem = memoryMetrics {
+            alertManager.checkMemoryAlert(usage: mem.usedPercentage)
+        }
+        if let disk = diskMetrics {
+            let usagePercent = Double(disk.totalUsedBytes) / Double(disk.totalBytes) * 100
+            alertManager.checkDiskAlert(usage: usagePercent)
+        }
+        if let battery = batteryMetrics {
+            alertManager.checkBatteryAlert(percentage: battery.percentage, isCharging: battery.isCharging)
+        }
     }
 
     private func fetchCPUMetrics() -> CPUMetrics {

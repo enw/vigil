@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuContentView: View {
     @StateObject private var metricsProvider = SystemMetricsProvider()
+    @State private var showDetailView = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -16,10 +17,6 @@ struct MenuContentView: View {
                         "Uptime: \(cpu.formattedUptime)"
                     ]
                 )
-            } else {
-                Text("Loading CPU metrics...")
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
             }
 
             // Memory Section
@@ -33,10 +30,46 @@ struct MenuContentView: View {
                         "Free: \(memory.formattedFree)"
                     ]
                 )
-            } else {
-                Text("Loading memory metrics...")
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
+            }
+
+            // Network Section
+            if let network = metricsProvider.networkMetrics {
+                MetricSectionView(
+                    title: "Network",
+                    value: String(format: "%.1f Mbps", network.bandwidth.downloadMbps),
+                    details: [
+                        "Down: \(String(format: "%.2f", network.bandwidth.downloadMbps)) Mbps",
+                        "Up: \(String(format: "%.2f", network.bandwidth.uploadMbps)) Mbps",
+                        network.addresses.privateIP ?? "No IP"
+                    ]
+                )
+            }
+
+            // Disk Section
+            if let disk = metricsProvider.diskMetrics {
+                let percentage = (Double(disk.totalUsedBytes) / Double(disk.totalBytes) * 100)
+                MetricSectionView(
+                    title: "Disk",
+                    value: String(format: "%.1f%%", percentage),
+                    details: [
+                        formatBytes(disk.totalUsedBytes) + " used",
+                        formatBytes(disk.totalBytes - disk.totalUsedBytes) + " free",
+                        "\(disk.volumes.count) volume\(disk.volumes.count == 1 ? "" : "s")"
+                    ]
+                )
+            }
+
+            // Battery Section
+            if let battery = metricsProvider.batteryMetrics {
+                MetricSectionView(
+                    title: "Battery",
+                    value: "\(battery.percentage)%",
+                    details: [
+                        battery.isCharging ? "Charging" : "On Battery",
+                        "Health: \(battery.health)",
+                        "Cycles: \(battery.cycleCount)"
+                    ]
+                )
             }
 
             Divider()
@@ -69,12 +102,24 @@ struct MenuContentView: View {
             }
         }
         .padding()
-        .frame(width: 280)
+        .frame(width: 320)
         .onAppear {
             metricsProvider.start()
         }
         .onDisappear {
             metricsProvider.stop()
+        }
+    }
+
+    private func formatBytes(_ bytes: UInt64) -> String {
+        if bytes < 1024 {
+            return "\(bytes) B"
+        } else if bytes < 1024 * 1024 {
+            return String(format: "%.0f KB", Double(bytes) / 1024)
+        } else if bytes < 1024 * 1024 * 1024 {
+            return String(format: "%.0f MB", Double(bytes) / 1024 / 1024)
+        } else {
+            return String(format: "%.1f GB", Double(bytes) / 1024 / 1024 / 1024)
         }
     }
 }
