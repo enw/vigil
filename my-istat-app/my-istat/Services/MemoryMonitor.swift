@@ -26,7 +26,7 @@ class MemoryMonitor {
         let active = UInt64(vmStats.active_count) * UInt64(pageSize)
         let inactive = UInt64(vmStats.inactive_count) * UInt64(pageSize)
         let wired = UInt64(vmStats.wire_count) * UInt64(pageSize)
-        let compressed = UInt64(vmStats.compressed_count) * UInt64(pageSize)
+        let compressed = UInt64(vmStats.compressor_page_count) * UInt64(pageSize)
 
         let used = active + wired + compressed
         let free = UInt64(vmStats.free_count) * UInt64(pageSize)

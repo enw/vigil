@@ -15,7 +15,7 @@ struct SimpleGraph: View {
             if data.isEmpty {
                 Text("No data available")
                     .font(.system(size: 10))
-                    .foregroundColor(.tertiary)
+                    .foregroundColor(.gray)
                     .frame(height: 60)
             } else {
                 ZStack {
@@ -31,9 +31,9 @@ struct SimpleGraph: View {
                     }
 
                     // Graph line
-                    Canvas { context in
-                        let width = 300.0
-                        let height = 60.0
+                    Canvas { context, size in
+                        let width = size.width
+                        let height = size.height
                         let step = width / Double(max(data.count - 1, 1))
 
                         var path = Path()
@@ -71,16 +71,5 @@ struct SimpleGraph: View {
         .padding()
         .background(Color(nsColor: .controlBackgroundColor))
         .cornerRadius(6)
-    }
-}
-
-struct SimpleGraph_Previews: PreviewProvider {
-    static var previews: some View {
-        SimpleGraph(
-            data: [10, 15, 25, 35, 30, 40, 35, 45, 50, 40],
-            title: "CPU Usage",
-            color: .blue
-        )
-        .padding()
     }
 }

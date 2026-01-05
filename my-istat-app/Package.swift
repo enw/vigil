@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "vigil",
     platforms: [
-        .macOS(.v11)
+        .macOS(.v13)
     ],
     dependencies: [],
     targets: [
@@ -12,6 +12,9 @@ let package = Package(
             name: "vigil",
             dependencies: [],
             path: "my-istat",
+            swiftSettings: [
+                .unsafeFlags(["-parse-as-library"])
+            ],
             linkerSettings: [
                 .linkedFramework("Cocoa"),
                 .linkedFramework("IOKit"),

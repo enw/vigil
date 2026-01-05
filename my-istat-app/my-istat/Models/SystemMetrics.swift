@@ -1,4 +1,5 @@
 import Foundation
+import ObjectiveC
 
 // MARK: - CPU Metrics
 struct CPUMetrics {
@@ -77,16 +78,25 @@ class SystemMetricsProvider: ObservableObject {
         // Update immediately
         updateMetrics()
 
-        // Set up periodic updates
-        updateTimer = Timer.scheduledTimer(withTimeInterval: updateInterval, repeats: true) { [weak self] _ in
-            self?.updateMetrics()
+        // Set up periodic updates using Task instead of Timer
+        let updateTask = Task {
+            while isRunning {
+                try? await Task.sleep(nanoseconds: UInt64(updateInterval * 1_000_000_000))
+                if isRunning {
+                    updateMetrics()
+                }
+            }
         }
+
+        // Store reference to allow cancellation later
+        objc_setAssociatedObject(self, "updateTask", updateTask, .OBJC_ASSOCIATION_RETAIN)
     }
 
     func stop() {
-        updateTimer?.invalidate()
-        updateTimer = nil
         isRunning = false
+        if let updateTask = objc_getAssociatedObject(self, "updateTask") as? Task<Void, Never> {
+            updateTask.cancel()
+        }
     }
 
     private func updateMetrics() {

@@ -44,7 +44,11 @@ struct MenuContentView: View {
 
             // Quick Actions
             VStack(alignment: .leading, spacing: 6) {
-                Button(action: { NSWorkspace.shared.launchApplication("Activity Monitor") }) {
+                Button(action: {
+                    if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.ActivityMonitor") {
+                        NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration(), completionHandler: { _, _ in })
+                    }
+                }) {
                     Label("Activity Monitor", systemImage: "list.dash")
                 }
                 .buttonStyle(.plain)
@@ -106,11 +110,7 @@ struct MetricSectionView: View {
             }
         }
         .padding(10)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(Color(red: 0.95, green: 0.95, blue: 0.95))
         .cornerRadius(6)
     }
-}
-
-#Preview {
-    MenuContentView()
 }

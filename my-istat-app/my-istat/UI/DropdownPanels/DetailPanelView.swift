@@ -23,7 +23,7 @@ struct DetailPanelView: View {
                     .font(.system(size: 10, weight: .regular))
                 }
                 .padding()
-                .background(Color(nsColor: .controlBackgroundColor))
+                .background(Color(red: 0.95, green: 0.95, blue: 0.95))
                 .cornerRadius(6)
 
                 SimpleGraph(
@@ -50,7 +50,7 @@ struct DetailPanelView: View {
                     .font(.system(size: 10, weight: .regular))
                 }
                 .padding()
-                .background(Color(nsColor: .controlBackgroundColor))
+                .background(Color(red: 0.95, green: 0.95, blue: 0.95))
                 .cornerRadius(6)
 
                 SimpleGraph(
@@ -68,12 +68,15 @@ struct DetailPanelView: View {
             metricsProvider.start()
 
             // Update history
-            Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-                if let cpu = metricsProvider.cpuMetrics, let memory = metricsProvider.memoryMetrics {
-                    historyManager.addDataPoint(
-                        cpuUsage: cpu.totalUsage,
-                        memoryUsage: memory.usedPercentage
-                    )
+            Task {
+                while true {
+                    try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                    if let cpu = metricsProvider.cpuMetrics, let memory = metricsProvider.memoryMetrics {
+                        historyManager.addDataPoint(
+                            cpuUsage: cpu.totalUsage,
+                            memoryUsage: memory.usedPercentage
+                        )
+                    }
                 }
             }
         }
@@ -102,8 +105,4 @@ struct DetailRow: View {
                 .fontWeight(.semibold)
         }
     }
-}
-
-#Preview {
-    DetailPanelView()
 }

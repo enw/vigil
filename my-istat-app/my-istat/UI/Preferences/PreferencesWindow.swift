@@ -18,7 +18,7 @@ struct PreferencesWindow: View {
                 }
                 Spacer()
             }
-            .background(Color(nsColor: .controlBackgroundColor))
+            .background(Color(red: 0.95, green: 0.95, blue: 0.95))
 
             Divider()
 
@@ -33,7 +33,6 @@ struct PreferencesWindow: View {
                 NotificationPreferencesView()
                     .tag("notifications")
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
         }
         .frame(width: 500, height: 400)
     }
@@ -56,7 +55,7 @@ struct TabButton: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .foregroundColor(isSelected ? .blue : .secondary)
-            .background(isSelected ? Color(nsColor: .controlBackgroundColor).opacity(0.5) : .clear)
+            .background(isSelected ? Color(red: 0.9, green: 0.9, blue: 0.9) : .clear)
         }
         .buttonStyle(.plain)
     }
@@ -122,8 +121,8 @@ struct MenuBarPreferencesView: View {
 
             GroupBox(label: Text("Display Mode").font(.system(size: 12, weight: .semibold))) {
                 VStack(alignment: .leading, spacing: 8) {
-                    RadioButton("Individual items", selected: true)
-                    RadioButton("Combined icon", selected: false)
+                    RadioButton(label: "Individual items", selected: true)
+                    RadioButton(label: "Combined icon", selected: false)
                 }
                 .font(.system(size: 11))
             }
@@ -189,8 +188,4 @@ struct RadioButton: View {
             Spacer()
         }
     }
-}
-
-#Preview {
-    PreferencesWindow()
 }

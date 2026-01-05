@@ -1,10 +1,11 @@
 import Foundation
 
-class HistoryManager {
+class HistoryManager: ObservableObject {
     private var cpuHistory: RingBuffer<Double>
     private var memoryHistory: RingBuffer<Double>
     private var timestamps: RingBuffer<Date>
     private let maxHistoryPoints = 3600 // 1 hour at 1-second intervals
+    private let lock = NSLock()
 
     init() {
         self.cpuHistory = RingBuffer(capacity: maxHistoryPoints)
@@ -13,6 +14,8 @@ class HistoryManager {
     }
 
     func addDataPoint(cpuUsage: Double, memoryUsage: Double) {
+        lock.lock()
+        defer { lock.unlock() }
         cpuHistory.append(cpuUsage)
         memoryHistory.append(memoryUsage)
         timestamps.append(Date())
