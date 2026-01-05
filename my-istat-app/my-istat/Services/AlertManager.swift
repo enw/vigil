@@ -47,8 +47,8 @@ class AlertManager: ObservableObject {
     private var activeRules: [AlertRule] = []
 
     init() {
-        requestNotificationPermission()
         loadDefaultRules()
+        // Defer notification permission request - only do it when we actually need to send
     }
 
     private func requestNotificationPermission() {
@@ -186,8 +186,14 @@ class AlertManager: ObservableObject {
             trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
         )
 
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
+        // Request permission if needed, then send
+        Task {
+            do {
+                let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+                if granted {
+                    try await UNUserNotificationCenter.current().add(request)
+                }
+            } catch {
                 print("Failed to send notification: \(error)")
             }
         }

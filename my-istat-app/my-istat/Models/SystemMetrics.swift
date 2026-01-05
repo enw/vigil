@@ -76,7 +76,7 @@ class SystemMetricsProvider: ObservableObject {
     private let networkMonitor = NetworkMonitor()
     private let diskMonitor = DiskMonitor()
     private let batteryMonitor = BatteryMonitor()
-    let alertManager = AlertManager()
+    lazy var alertManager = AlertManager()
 
     func start() {
         guard !isRunning else { return }
