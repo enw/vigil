@@ -1,6 +1,9 @@
 import Foundation
 
 class DiskMonitor {
+    private var cachedDiskInfo: DiskInfo?
+    private var lastDiskUpdate: Date = Date()
+    private let diskCacheTTL: TimeInterval = 10.0 // Cache disk info for 10 seconds
     struct DiskInfo {
         let volumes: [VolumeInfo]
         let totalUsedBytes: UInt64
@@ -38,6 +41,12 @@ class DiskMonitor {
     }
 
     func getDiskInfo() -> DiskInfo {
+        // Cache disk info to reduce filesystem calls
+        if let cached = cachedDiskInfo,
+           Date().timeIntervalSince(lastDiskUpdate) < diskCacheTTL {
+            return cached
+        }
+        
         let volumes = getDiskVolumes()
 
         var totalUsed: UInt64 = 0
@@ -48,11 +57,16 @@ class DiskMonitor {
             totalSize += volume.totalBytes
         }
 
-        return DiskInfo(
+        let diskInfo = DiskInfo(
             volumes: volumes,
             totalUsedBytes: totalUsed,
             totalBytes: totalSize
         )
+        
+        cachedDiskInfo = diskInfo
+        lastDiskUpdate = Date()
+        
+        return diskInfo
     }
 
     private func getDiskVolumes() -> [VolumeInfo] {

@@ -3,6 +3,9 @@ import SystemConfiguration
 
 class NetworkMonitor {
     private var previousStats: [String: NetworkStats] = [:]
+    private var cachedNetworkInfo: NetworkInfo?
+    private var lastAddressUpdate: Date = Date()
+    private let addressCacheTTL: TimeInterval = 5.0 // Cache address info for 5 seconds
 
     struct NetworkStats {
         let bytesIn: UInt64
@@ -31,7 +34,19 @@ class NetworkMonitor {
 
     func getCurrentNetworkInfo() -> NetworkInfo {
         let bandwidth = getBandwidth()
-        let addresses = getAddresses()
+        
+        // Cache address info to reduce system calls
+        let addresses: AddressInfo
+        if Date().timeIntervalSince(lastAddressUpdate) >= addressCacheTTL {
+            addresses = getAddresses()
+            lastAddressUpdate = Date()
+        } else if let cached = cachedNetworkInfo {
+            addresses = cached.addresses
+        } else {
+            addresses = getAddresses()
+            lastAddressUpdate = Date()
+        }
+        
         return NetworkInfo(bandwidth: bandwidth, addresses: addresses)
     }
 

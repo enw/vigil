@@ -1,5 +1,7 @@
 import Foundation
+import Foundation
 import ObjectiveC
+import SwiftUI
 
 // MARK: - CPU Metrics
 struct CPUMetrics {
@@ -67,15 +69,23 @@ class SystemMetricsProvider: ObservableObject {
     @Published var networkMetrics: NetworkMonitor.NetworkInfo?
     @Published var diskMetrics: DiskMonitor.DiskInfo?
     @Published var batteryMetrics: BatteryMonitor.BatteryInfo?
+    @Published var smartInfos: [SMARTMonitor.SMARTInfo] = []
     @Published var isRunning = false
 
     private var updateTimer: Timer?
-    private let updateInterval: TimeInterval = 1.0
+    private let smartUpdateInterval: TimeInterval = 60.0 // S.M.A.R.T. updates less frequently
+    private var lastSmartUpdate: Date = Date(timeIntervalSince1970: 0)
+    
+    private var updateInterval: TimeInterval {
+        UserDefaults.standard.double(forKey: "updateInterval") > 0 ? 
+            UserDefaults.standard.double(forKey: "updateInterval") : 1.0
+    }
     private let cpuMonitor = CPUMonitor()
     private let memoryMonitor = MemoryMonitor()
     private let networkMonitor = NetworkMonitor()
     private let diskMonitor = DiskMonitor()
     private let batteryMonitor = BatteryMonitor()
+    private let smartMonitor = SMARTMonitor()
     lazy var alertManager = AlertManager()
 
     func start() {
@@ -112,6 +122,12 @@ class SystemMetricsProvider: ObservableObject {
         networkMetrics = networkMonitor.getCurrentNetworkInfo()
         diskMetrics = diskMonitor.getDiskInfo()
         batteryMetrics = batteryMonitor.getBatteryInfo()
+        
+        // S.M.A.R.T. updates less frequently (every 60s)
+        if Date().timeIntervalSince(lastSmartUpdate) >= smartUpdateInterval {
+            smartInfos = smartMonitor.getSMARTInfo()
+            lastSmartUpdate = Date()
+        }
 
         // Check alerts
         if let cpu = cpuMetrics {

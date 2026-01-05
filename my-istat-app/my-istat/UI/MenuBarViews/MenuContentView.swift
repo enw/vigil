@@ -72,6 +72,11 @@ struct MenuContentView: View {
                 )
             }
 
+            // S.M.A.R.T. Section
+            if !metricsProvider.smartInfos.isEmpty {
+                SMARTPanelView(smartInfos: metricsProvider.smartInfos)
+            }
+
             Divider()
                 .padding(.vertical, 4)
 
