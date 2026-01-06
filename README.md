@@ -6,29 +6,41 @@ A lightweight macOS system monitoring application for the menu bar, inspired by 
 
 Vigil displays real-time CPU and memory usage in your macOS menu bar with detailed dropdown panels showing historical graphs and system information.
 
-## Phase 1 MVP Features
+## Implemented Features
 
-### Core Monitoring
-- **CPU Usage**: Real-time usage percentage, core count, load averages, uptime
-- **Memory Usage**: Real-time usage percentage, used/free/total breakdown, compressed memory
-- **System Metrics**: Load averages (1m, 5m, 15m), system uptime
+### System Monitoring
+- **CPU Monitoring**: Real-time usage %, individual core tracking, load averages (1m/5m/15m), system uptime
+- **Memory Monitoring**: Usage %, memory pressure, free/used/total/compressed breakdown, historical graphs
+- **Network Monitoring**: Real-time bandwidth (up/down in Mbps), total bytes, IP addresses, DNS servers, cached for performance
+- **Disk Monitoring**: Per-volume space breakdown (used/free/total), health indicators, S.M.A.R.T. status checking
+- **Battery Monitoring**: Charge %, health status, charging state, cycle count, time remaining, Bluetooth device batteries
+- **Sensor Monitoring**: CPU/GPU temperatures, fan speeds (RPM), color-coded temperature warnings
+- **Process Monitoring**: Top processes by CPU and memory usage, PID tracking
+- **Weather Integration**: OpenWeatherMap API with temperature, conditions, humidity, wind, sunrise/sunset
 
 ### User Interface
-- **Menu Bar Integration**: Compact display of CPU and memory metrics with icons (SF Symbols)
-- **Dropdown Panels**: Detailed views with system information accessible via menu bar
-- **Historical Graphs**: Simple graph visualization of CPU and memory trends over 2 minutes
-- **Quick Actions**: Direct access to Activity Monitor and app quit
+- **Menu Bar Integration**: Dynamic combined mode showing "CPU XX% MEM XX%" or individual metric items
+- **Dropdown Panels**: 8 detailed views accessible via menu bar click with comprehensive system information
+- **Historical Graphs**: 2-minute trend visualization for CPU and memory using Canvas rendering
+- **Color-Coded Status**: Temperature warnings (blue/green/orange/red), disk usage (green/yellow/orange/red)
+- **Quick Actions**: Activity Monitor, Preferences window, Quit
 
-### Preferences
-- **General Settings**: Launch at login, update frequency control (0.5s - 5s)
-- **Menu Bar Configuration**: Toggle visibility of individual metrics, display mode selection
-- **Alert Settings**: Enable/disable notifications with customizable CPU/memory thresholds
+### Alerts & Notifications
+- Rule-based macOS notifications with configurable thresholds
+- CPU/Memory high alerts with 60-second cooldown to prevent spam
+- Notification history tracking (max 100 entries)
+- Graceful initialization avoiding app startup crashes
+
+### Preferences Window
+- **General**: Launch at login, update frequency (0.5s - 5s configurable)
+- **Menu Bar**: Toggle per-metric visibility, display mode selection
+- **Alerts**: Enable/disable notifications, CPU/memory threshold customization (defaults: 80%/85%)
 
 ## Architecture
 
 ### Project Structure
 ```
-my-istat-app/
+vigil/
 ├── my-istat/
 │   ├── App/
 │   │   └── main.swift              # SwiftUI app entry point + AppDelegate
@@ -37,12 +49,29 @@ my-istat-app/
 │   ├── Services/
 │   │   ├── CPUMonitor.swift        # CPU usage calculations (IOKit)
 │   │   ├── MemoryMonitor.swift     # Memory stats (mach/vm_statistics64)
-│   │   └── HistoryManager.swift    # Historical data tracking with RingBuffer
+│   │   ├── NetworkMonitor.swift    # Network bandwidth and IP info
+│   │   ├── DiskMonitor.swift       # Disk space and volumes
+│   │   ├── BatteryMonitor.swift    # Battery status and health
+│   │   ├── SMARTMonitor.swift      # Disk health status
+│   │   ├── SensorMonitor.swift     # CPU/GPU temps and fan speeds
+│   │   ├── ProcessMonitor.swift    # Top processes by CPU/memory
+│   │   ├── WeatherService.swift    # OpenWeatherMap integration
+│   │   ├── AlertManager.swift      # Notifications and alert rules
+│   │   ├── HistoryManager.swift    # Historical data with RingBuffer
+│   │   └── [other monitors]
 │   └── UI/
 │       ├── MenuBarViews/
-│       │   └── MenuContentView.swift # Menu bar dropdown content
+│       │   └── MenuContentView.swift # Combined menu bar label
 │       ├── DropdownPanels/
-│       │   └── DetailPanelView.swift # Detailed metrics with graphs
+│       │   ├── DetailPanelView.swift # CPU/Memory details
+│       │   ├── NetworkPanelView.swift # Network metrics
+│       │   ├── DiskPanelView.swift   # Disk space by volume
+│       │   ├── BatteryPanelView.swift # Battery status
+│       │   ├── SMARTPanelView.swift   # Disk health
+│       │   ├── SensorPanelView.swift  # Temps and fans
+│       │   ├── TopProcessesPanelView.swift # Top processes
+│       │   ├── WeatherPanelView.swift # Weather display
+│       │   └── [other panels]
 │       ├── Preferences/
 │       │   └── PreferencesWindow.swift # Settings window (3 tabs)
 │       └── Components/
@@ -61,42 +90,21 @@ my-istat-app/
 
 ## Building
 
-### Option 1: Using Swift Package Manager (Easiest)
+### Quick Start
 
 ```bash
-cd my-istat-app
-swift build -c release
-```
-
-The compiled binary will be at: `.build/release/vigil`
-
-### Option 2: Create Xcode Project
-
-If you want an Xcode project for development:
-
-```bash
-cd my-istat-app
-swift package generate-xcodeproj
-open vigil.xcodeproj
-```
-
-Then build using Xcode (Cmd+B) or the Product menu.
-
-### Option 3: Build & Run Directly
-
-```bash
-cd my-istat-app
+cd vigil
 swift run vigil
 ```
 
-### Option 4: Create Standalone App Bundle
+The menu bar app will launch immediately.
+
+### Release Build
 
 ```bash
-cd my-istat-app
-mkdir -p build
+cd vigil
 swift build -c release
-cp .build/release/vigil build/
-# Create Vigil.app structure (see below)
+.build/release/vigil
 ```
 
 ### Creating a Proper macOS App Bundle
@@ -105,7 +113,7 @@ To create a distributable `.app` bundle:
 
 ```bash
 #!/bin/bash
-cd my-istat-app
+cd vigil
 
 # Build release binary
 swift build -c release
@@ -130,22 +138,43 @@ chmod +x "$APP_DIR/MacOS/$APP_NAME"
 echo "Created: build/$APP_NAME.app"
 ```
 
-After creating the bundle, you can:
+After creating the bundle:
 - Double-click to launch
 - Move to `/Applications/` folder
 - Use `open build/Vigil.app` to run from terminal
 
 ### System Requirements
 
-- macOS 11.0 (Big Sur) or later
-- Xcode 13+ (if using Xcode method)
+- macOS 13.0 (Ventura) or later (required for MenuBarExtra)
 - Swift 5.9+
 
-## Next Phases
+## Architecture Notes
 
-**Phase 2**: Network and disk monitoring, notification system, combined menu bar mode
-**Phase 3**: Sensor monitoring (fan speeds), weather integration, per-app breakdowns
-**Phase 4**: Performance optimization, accessibility, localization, auto-updates
+### Performance Optimizations
+- **Caching**: NetworkMonitor caches address info (5s TTL), DiskMonitor caches disk info (10s TTL)
+- **Polling Frequencies**: CPU/Memory/Network/Disk/Processes updated every 1s, Sensors every 5s, Weather every 10min (with internal cache)
+- **Threading**: Metrics updates on background threads, UI updates on MainActor via @Published properties
+- **History Management**: RingBuffer with NSLock for thread-safe 1-hour history (3600 points)
+
+### API Integrations
+- **OpenWeatherMap**: Free tier supports 1000 calls/day (sufficient for single user with 10min cache)
+- **macOS System APIs**: IOKit, mach, SystemConfiguration, DiskArbitration, UserNotifications
+- **Command-line Tools**: `system_profiler`, `diskutil`, `pmset`, `ioreg`, `ps` for fallback data
+
+### Accessibility
+- SF Symbols throughout (no custom icons)
+- Color-coded status with text labels for clarity
+- Full keyboard navigation in preferences window
+- Alert notifications with system sound
+
+## Future Enhancements
+- S.M.A.R.T. disk temperature predictions
+- Custom notification sounds
+- Bluetooth device battery history graphs
+- Per-app network usage breakdown (requires packet analysis)
+- Fan speed control with custom curves (requires elevated permissions)
+- Multiple location weather support
+- Localization for international users
 
 See [SPECIFICATION.md](docs/SPECIFICATION.md) for detailed requirements and design decisions.
 
