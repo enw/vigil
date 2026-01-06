@@ -11,7 +11,7 @@ let package = Package(
         .executableTarget(
             name: "vigil",
             dependencies: [],
-            path: "my-istat",
+            path: "vigil",
             swiftSettings: [
                 .unsafeFlags(["-parse-as-library"])
             ],

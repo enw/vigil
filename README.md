@@ -41,7 +41,7 @@ Vigil displays real-time CPU and memory usage in your macOS menu bar with detail
 ### Project Structure
 ```
 vigil/
-├── my-istat/
+├── vigil/
 │   ├── App/
 │   │   └── main.swift              # SwiftUI app entry point + AppDelegate
 │   ├── Models/
@@ -130,7 +130,7 @@ mkdir -p "$APP_DIR/Resources"
 cp "$BINARY_PATH" "$APP_DIR/MacOS/$APP_NAME"
 
 # Copy Info.plist
-cp my-istat/Info.plist "$APP_DIR/Info.plist"
+cp vigil/Info.plist "$APP_DIR/Info.plist"
 
 # Make it executable
 chmod +x "$APP_DIR/MacOS/$APP_NAME"

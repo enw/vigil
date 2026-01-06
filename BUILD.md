@@ -6,14 +6,14 @@ Complete guide to building and running the Vigil system monitor for macOS.
 
 ### Option 1: Run Directly (Fastest)
 ```bash
-cd my-istat-app
+cd vigil
 swift run vigil
 ```
 App launches immediately in menu bar.
 
 ### Option 2: Build Release Binary
 ```bash
-cd my-istat-app
+cd vigil
 swift build -c release
 .build/release/vigil
 ```
@@ -21,7 +21,7 @@ Binary at: `.build/release/vigil` (~50MB)
 
 ### Option 3: Create Distributable .app Bundle
 ```bash
-cd my-istat-app
+cd vigil
 ./scripts/build-app.sh
 ```
 Creates: `build/Vigil.app` (ready to distribute)
@@ -48,21 +48,21 @@ swiftc --version
 
 #### Debug Build (faster, includes debugging symbols)
 ```bash
-cd my-istat-app
+cd vigil
 swift build
 .build/debug/vigil
 ```
 
 #### Release Build (optimized, smaller)
 ```bash
-cd my-istat-app
+cd vigil
 swift build -c release
 .build/release/vigil
 ```
 
 #### Run Directly (compile + execute in one step)
 ```bash
-cd my-istat-app
+cd vigil
 swift run vigil
 ```
 
@@ -74,7 +74,7 @@ swift run vigil
 
 #### Automated Script
 
-Create `my-istat-app/scripts/build-app.sh`:
+Create `vigil/scripts/build-app.sh`:
 
 ```bash
 #!/bin/bash
@@ -98,7 +98,7 @@ mkdir -p "$APP_DIR/Resources"
 cp "$BINARY_PATH" "$APP_DIR/MacOS/$APP_NAME"
 
 # Copy Info.plist
-cp "my-istat/Info.plist" "$APP_DIR/Info.plist"
+cp "vigil/Info.plist" "$APP_DIR/Info.plist"
 
 # Make executable
 chmod +x "$APP_DIR/MacOS/$APP_NAME"
@@ -114,8 +114,8 @@ echo "📂 To install: cp -r build/$APP_NAME.app /Applications/"
 #### Run It
 
 ```bash
-chmod +x my-istat-app/scripts/build-app.sh
-./my-istat-app/scripts/build-app.sh
+chmod +x vigil/scripts/build-app.sh
+./vigil/scripts/build-app.sh
 ```
 
 #### Launch the App
@@ -135,7 +135,7 @@ cp -r build/Vigil.app /Applications/
 For development in Xcode:
 
 ```bash
-cd my-istat-app
+cd vigil
 swift package generate-xcodeproj
 open vigil.xcodeproj
 ```
@@ -244,7 +244,7 @@ cp -r build/Vigil.app /Applications/
 ### Making Changes
 ```bash
 # Edit source files
-vim my-istat-app/my-istat/App/main.swift
+vim vigil/vigil/App/main.swift
 
 # Rebuild and run immediately
 swift run vigil
@@ -262,7 +262,7 @@ swift build  # Compile
 ### Before Distribution
 ```bash
 swift build -c release  # Optimize
-./my-istat-app/scripts/build-app.sh  # Create .app
+./vigil/scripts/build-app.sh  # Create .app
 # Test: open build/Vigil.app
 ```
 
@@ -284,13 +284,13 @@ jobs:
       - uses: actions/checkout@v3
       - name: Build
         run: |
-          cd my-istat-app
+          cd vigil
           swift build -c release
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
           name: vigil-release
-          path: my-istat-app/.build/release/vigil
+          path: vigil/.build/release/vigil
 ```
 
 ---

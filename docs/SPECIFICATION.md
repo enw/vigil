@@ -1,4 +1,4 @@
-# my-istat: iStat Menus Clone Specification
+# vigil: iStat Menus Clone Specification
 
 ## Project Overview
 
@@ -153,9 +153,9 @@
 
 #### Project Structure
 ```
-my-istat/
-├── my-istat.xcodeproj
-├── my-istat/
+vigil/
+├── vigil.xcodeproj
+├── vigil/
 │   ├── App/
 │   │   ├── AppDelegate.swift
 │   │   └── MenuBarController.swift
