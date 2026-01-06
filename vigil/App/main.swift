@@ -2,14 +2,15 @@ import SwiftUI
 
 @main
 struct VigilApp: App {
+    @StateObject private var metricsProvider = SystemMetricsProvider()
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        MenuBarExtra(content: {
-            MenuContentView()
-        }, label: {
-            MenuBarLabel()
-        })
+        MenuBarExtra {
+            MenuContentView(metricsProvider: metricsProvider)
+        } label: {
+            MenuBarLabel(metricsProvider: metricsProvider)
+        }
 
         Settings {
             PreferencesWindow()
@@ -18,7 +19,7 @@ struct VigilApp: App {
 }
 
 struct MenuBarLabel: View {
-    @StateObject private var metricsProvider = SystemMetricsProvider()
+    @ObservedObject var metricsProvider: SystemMetricsProvider
 
     var body: some View {
         HStack(spacing: 6) {

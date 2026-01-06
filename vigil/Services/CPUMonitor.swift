@@ -19,7 +19,10 @@ class CPUMonitor {
             }
         }
 
-        guard result == KERN_SUCCESS else { return 0 }
+        guard result == KERN_SUCCESS else { 
+            print("Vigil: CPU stats failed with result: \(result)")
+            return 0 
+        }
 
         let userDiff = Double(info.cpu_ticks.0 - (previousInfo?.cpu_ticks.0 ?? 0))
         let sysDiff = Double(info.cpu_ticks.1 - (previousInfo?.cpu_ticks.1 ?? 0))
@@ -33,6 +36,7 @@ class CPUMonitor {
         }
 
         let usage = ((userDiff + sysDiff) / totalDiff) * 100
+        print("Vigil: CPU usage calculated: \(usage)% (user: \(userDiff), sys: \(sysDiff), idle: \(idleDiff))")
 
         previousInfo = info
         return max(0, min(100, usage))

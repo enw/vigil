@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MenuContentView: View {
-    @StateObject private var metricsProvider = SystemMetricsProvider()
+    @ObservedObject var metricsProvider: SystemMetricsProvider
     @State private var showDetailView = false
 
     var body: some View {

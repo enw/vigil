@@ -104,18 +104,20 @@ class SystemMetricsProvider: ObservableObject {
         // Update immediately
         updateMetrics()
 
+        // Temporarily disable timer to test UI
         // Set up periodic updates using Task instead of Timer
-        let updateTask = Task {
-            while isRunning {
-                try? await Task.sleep(nanoseconds: UInt64(updateInterval * 1_000_000_000))
-                if isRunning {
-                    updateMetrics()
-                }
-            }
-        }
+        // let updateTask = Task {
+        //     while isRunning {
+        //         try? await Task.sleep(nanoseconds: UInt64(updateInterval * 1_000_000_000))
+        //         if isRunning {
+        //             updateMetrics()
+        //         }
+        //     }
+        // }
 
+        // Temporarily disable timer storage
         // Store reference to allow cancellation later
-        objc_setAssociatedObject(self, "updateTask", updateTask, .OBJC_ASSOCIATION_RETAIN)
+        // objc_setAssociatedObject(self, "updateTask", updateTask, .OBJC_ASSOCIATION_RETAIN)
     }
 
     func stop() {
@@ -125,46 +127,42 @@ class SystemMetricsProvider: ObservableObject {
         }
     }
 
-    private func updateMetrics() {
-        cpuMetrics = fetchCPUMetrics()
-        memoryMetrics = fetchMemoryMetrics()
-        networkMetrics = networkMonitor.getCurrentNetworkInfo()
-        diskMetrics = diskMonitor.getDiskInfo()
-        batteryMetrics = batteryMonitor.getBatteryInfo()
+    func updateMetrics() {
+        print("Vigil: updateMetrics called - using dummy data")
+        // Use dummy data to test UI without system calls
+        let cpu = CPUMetrics(
+            timestamp: Date(),
+            totalUsage: 15.0,
+            processorCount: 8,
+            temperature: 45.0,
+            loadAverage: (1.2, 1.5, 1.8),
+            uptime: 3600.0
+        )
+        let mem = MemoryMetrics(
+            timestamp: Date(),
+            total: 16000000000,
+            used: 8000000000,
+            free: 8000000000,
+            active: 4000000000,
+            inactive: 2000000000,
+            wired: 1000000000,
+            compressed: 500000000
+        )
         
-        // S.M.A.R.T. updates less frequently (every 60s)
-        if Date().timeIntervalSince(lastSmartUpdate) >= smartUpdateInterval {
-            smartInfos = smartMonitor.getSMARTInfo()
-            lastSmartUpdate = Date()
-        }
+        print("Vigil: Setting cpuMetrics to \(cpu.totalUsage)%")
+        print("Vigil: Setting memoryMetrics to \(mem.usedPercentage)%")
         
-        // Sensor updates every 5s
-        if Date().timeIntervalSince(lastSensorUpdate) >= sensorUpdateInterval {
-            sensorReadings = sensorMonitor.getAllSensorReadings()
-            lastSensorUpdate = Date()
-        }
-        
-        // Process updates every second (same as main metrics)
-        topCPUProcesses = processMonitor.getTopProcesses(by: .cpu, limit: 5)
-        topMemoryProcesses = processMonitor.getTopProcesses(by: .memory, limit: 5)
-        
-        // Weather updates every 10 minutes (via caching in WeatherService)
-        weatherInfo = weatherService.getWeatherInfo()
-
-        // Check alerts
-        if let cpu = cpuMetrics {
-            alertManager.checkCPUAlert(usage: cpu.totalUsage)
-        }
-        if let mem = memoryMetrics {
-            alertManager.checkMemoryAlert(usage: mem.usedPercentage)
-        }
-        if let disk = diskMetrics {
-            let usagePercent = Double(disk.totalUsedBytes) / Double(disk.totalBytes) * 100
-            alertManager.checkDiskAlert(usage: usagePercent)
-        }
-        if let battery = batteryMetrics {
-            alertManager.checkBatteryAlert(percentage: battery.percentage, isCharging: battery.isCharging)
-        }
+        cpuMetrics = cpu
+        memoryMetrics = mem
+        // Temporarily disable all system monitoring calls
+        // networkMetrics = networkMonitor.getCurrentNetworkInfo()
+        // diskMetrics = diskMonitor.getDiskInfo()
+        // batteryMetrics = batteryMonitor.getBatteryInfo()
+        // smartInfos = []
+        // sensorReadings = []
+        // topCPUProcesses = []
+        // topMemoryProcesses = []
+        // weatherInfo = nil
     }
 
     private func fetchCPUMetrics() -> CPUMetrics {
