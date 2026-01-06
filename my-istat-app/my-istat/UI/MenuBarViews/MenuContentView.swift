@@ -77,6 +77,24 @@ struct MenuContentView: View {
                 SMARTPanelView(smartInfos: metricsProvider.smartInfos)
             }
 
+            // Sensor Section
+            if !metricsProvider.sensorReadings.isEmpty {
+                SensorPanelView(sensorReadings: metricsProvider.sensorReadings)
+            }
+
+            // Top Processes Section
+            if !metricsProvider.topCPUProcesses.isEmpty || !metricsProvider.topMemoryProcesses.isEmpty {
+                TopProcessesPanelView(
+                    topCPUProcesses: metricsProvider.topCPUProcesses,
+                    topMemoryProcesses: metricsProvider.topMemoryProcesses
+                )
+            }
+
+            // Weather Section
+            if let weather = metricsProvider.weatherInfo {
+                WeatherPanelView(weatherInfo: weather)
+            }
+
             Divider()
                 .padding(.vertical, 4)
 

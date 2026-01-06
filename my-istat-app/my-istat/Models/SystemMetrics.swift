@@ -70,11 +70,17 @@ class SystemMetricsProvider: ObservableObject {
     @Published var diskMetrics: DiskMonitor.DiskInfo?
     @Published var batteryMetrics: BatteryMonitor.BatteryInfo?
     @Published var smartInfos: [SMARTMonitor.SMARTInfo] = []
+    @Published var sensorReadings: [SensorMonitor.SensorReading] = []
+    @Published var topCPUProcesses: [ProcessMonitor.ProcessInfo] = []
+    @Published var topMemoryProcesses: [ProcessMonitor.ProcessInfo] = []
+    @Published var weatherInfo: WeatherService.WeatherInfo?
     @Published var isRunning = false
 
     private var updateTimer: Timer?
     private let smartUpdateInterval: TimeInterval = 60.0 // S.M.A.R.T. updates less frequently
     private var lastSmartUpdate: Date = Date(timeIntervalSince1970: 0)
+    private let sensorUpdateInterval: TimeInterval = 5.0 // Sensor updates every 5s
+    private var lastSensorUpdate: Date = Date(timeIntervalSince1970: 0)
     
     private var updateInterval: TimeInterval {
         UserDefaults.standard.double(forKey: "updateInterval") > 0 ? 
@@ -86,6 +92,9 @@ class SystemMetricsProvider: ObservableObject {
     private let diskMonitor = DiskMonitor()
     private let batteryMonitor = BatteryMonitor()
     private let smartMonitor = SMARTMonitor()
+    private let sensorMonitor = SensorMonitor()
+    private let processMonitor = ProcessMonitor()
+    private let weatherService = WeatherService()
     lazy var alertManager = AlertManager()
 
     func start() {
@@ -128,6 +137,19 @@ class SystemMetricsProvider: ObservableObject {
             smartInfos = smartMonitor.getSMARTInfo()
             lastSmartUpdate = Date()
         }
+        
+        // Sensor updates every 5s
+        if Date().timeIntervalSince(lastSensorUpdate) >= sensorUpdateInterval {
+            sensorReadings = sensorMonitor.getAllSensorReadings()
+            lastSensorUpdate = Date()
+        }
+        
+        // Process updates every second (same as main metrics)
+        topCPUProcesses = processMonitor.getTopProcesses(by: .cpu, limit: 5)
+        topMemoryProcesses = processMonitor.getTopProcesses(by: .memory, limit: 5)
+        
+        // Weather updates every 10 minutes (via caching in WeatherService)
+        weatherInfo = weatherService.getWeatherInfo()
 
         // Check alerts
         if let cpu = cpuMetrics {
