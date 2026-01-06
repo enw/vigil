@@ -74,7 +74,7 @@ struct DetailPanelView: View {
                     if let cpu = metricsProvider.cpuMetrics, let memory = metricsProvider.memoryMetrics {
                         historyManager.addDataPoint(
                             cpuUsage: cpu.totalUsage,
-                            memoryUsage: memory.usedPercentage
+                            memoryUsage: Double(memory.usedPercentage)
                         )
                     }
                 }

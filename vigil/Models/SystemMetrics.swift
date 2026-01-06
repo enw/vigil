@@ -34,13 +34,13 @@ struct MemoryMetrics {
     let wired: UInt64
     let compressed: UInt64
 
-    var usedPercentage: Double {
+    var usedPercentage: Int {
         guard total > 0 else { return 0 }
-        return Double(used) / Double(total) * 100
+        return Int(Double(used) / Double(total) * 100)
     }
 
     var usagePercentage: String {
-        String(format: "%.1f%%", usedPercentage)
+        String(format: "%d%%", usedPercentage)
     }
 
     var formattedUsed: String {
@@ -82,9 +82,11 @@ class SystemMetricsProvider: ObservableObject {
     private let sensorUpdateInterval: TimeInterval = 5.0 // Sensor updates every 5s
     private var lastSensorUpdate: Date = Date(timeIntervalSince1970: 0)
     
+    private var _updateInterval: TimeInterval = 1.0
+    
     private var updateInterval: TimeInterval {
-        UserDefaults.standard.double(forKey: "updateInterval") > 0 ? 
-            UserDefaults.standard.double(forKey: "updateInterval") : 1.0
+        let value = UserDefaults.standard.double(forKey: "updateInterval")
+        return value > 0 ? value : 1.0
     }
     private let cpuMonitor = CPUMonitor()
     private let memoryMonitor = MemoryMonitor()
@@ -116,8 +118,27 @@ class SystemMetricsProvider: ObservableObject {
         
         // Store reference to allow cancellation later
         objc_setAssociatedObject(self, "updateTask", updateTask, .OBJC_ASSOCIATION_RETAIN)
+        
+        // Start observing preference changes for update interval
+        NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            let newInterval = self.updateInterval
+            if newInterval != self._updateInterval {
+                self._updateInterval = newInterval
+                self.restartTimer()
+            }
+        }
     }
 
+    private func restartTimer() {
+        stop()
+        start()
+    }
+    
     func stop() {
         isRunning = false
         if let updateTask = objc_getAssociatedObject(self, "updateTask") as? Task<Void, Never> {

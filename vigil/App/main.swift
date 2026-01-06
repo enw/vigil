@@ -4,6 +4,8 @@ import SwiftUI
 struct VigilApp: App {
     @StateObject private var metricsProvider = SystemMetricsProvider()
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @AppStorage("showCPU") private var showCPU = true
+    @AppStorage("showMemory") private var showMemory = true
 
     var body: some Scene {
         MenuBarExtra {
@@ -20,25 +22,32 @@ struct VigilApp: App {
 
 struct MenuBarLabel: View {
     @ObservedObject var metricsProvider: SystemMetricsProvider
+    @AppStorage("showCPU") private var showCPU = true
+    @AppStorage("showMemory") private var showMemory = true
 
     var body: some View {
-        HStack(spacing: 6) {
-            if let cpu = metricsProvider.cpuMetrics {
-                Text(String(format: "CPU %d%%", Int(cpu.totalUsage)))
-                    .font(.system(size: 11, weight: .semibold))
+        let titleText = buildTitleText()
+        Text(titleText)
+            .font(.system(size: 11, weight: .semibold))
+            .onAppear {
+                metricsProvider.start()
             }
-            
-            if let memory = metricsProvider.memoryMetrics {
-                Text(String(format: "MEM %d%%", Int(memory.usedPercentage)))
-                    .font(.system(size: 11, weight: .semibold))
-                    .id(memory.usedPercentage) // Force SwiftUI to update when percentage changes
+            .onDisappear {
+                metricsProvider.stop()
             }
+    }
+    
+    private func buildTitleText() -> String {
+        var components: [String] = []
+        
+        if showCPU, let cpu = metricsProvider.cpuMetrics {
+            components.append(String(format: "CPU %d%%", Int(cpu.totalUsage)))
         }
-        .onAppear {
-            metricsProvider.start()
+        
+        if showMemory, let memory = metricsProvider.memoryMetrics {
+            components.append(String(format: "MEM %d%%", memory.usedPercentage))
         }
-        .onDisappear {
-            metricsProvider.stop()
-        }
+        
+        return components.joined(separator: " ")
     }
 }
