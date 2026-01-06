@@ -31,6 +31,7 @@ struct MenuBarLabel: View {
             if let memory = metricsProvider.memoryMetrics {
                 Text(String(format: "MEM %d%%", Int(memory.usedPercentage)))
                     .font(.system(size: 11, weight: .semibold))
+                    .id(memory.usedPercentage) // Force SwiftUI to update when percentage changes
             }
         }
         .onAppear {

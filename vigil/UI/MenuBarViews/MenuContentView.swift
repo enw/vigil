@@ -110,7 +110,10 @@ struct MenuContentView: View {
                 .buttonStyle(.plain)
                 .font(.system(size: 11))
 
-                Button(action: { NSApp.activate(ignoringOtherApps: true) }) {
+                Button(action: { 
+                    NSApp.activate(ignoringOtherApps: true)
+                    PreferencesWindow().openWindow()
+                }) {
                     Label("Preferences", systemImage: "gear")
                 }
                 .buttonStyle(.plain)
