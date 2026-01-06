@@ -112,7 +112,7 @@ struct MenuContentView: View {
 
                 Button(action: { 
                     NSApp.activate(ignoringOtherApps: true)
-                    PreferencesWindow().openWindow()
+                    // Preferences window will be handled by SwiftUI Settings scene
                 }) {
                     Label("Preferences", systemImage: "gear")
                 }

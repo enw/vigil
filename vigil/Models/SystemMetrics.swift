@@ -104,20 +104,18 @@ class SystemMetricsProvider: ObservableObject {
         // Update immediately
         updateMetrics()
 
-        // Temporarily disable timer to test UI
         // Set up periodic updates using Task instead of Timer
-        // let updateTask = Task {
-        //     while isRunning {
-        //         try? await Task.sleep(nanoseconds: UInt64(updateInterval * 1_000_000_000))
-        //         if isRunning {
-        //             updateMetrics()
-        //         }
-        //     }
-        // }
-
-        // Temporarily disable timer storage
+        let updateTask = Task {
+            while isRunning {
+                try? await Task.sleep(nanoseconds: UInt64(updateInterval * 1_000_000_000))
+                if isRunning {
+                    updateMetrics()
+                }
+            }
+        }
+        
         // Store reference to allow cancellation later
-        // objc_setAssociatedObject(self, "updateTask", updateTask, .OBJC_ASSOCIATION_RETAIN)
+        objc_setAssociatedObject(self, "updateTask", updateTask, .OBJC_ASSOCIATION_RETAIN)
     }
 
     func stop() {
@@ -132,7 +130,7 @@ class SystemMetricsProvider: ObservableObject {
         // Use dummy data to test UI without system calls
         let cpu = CPUMetrics(
             timestamp: Date(),
-            totalUsage: 15.0,
+            totalUsage: Double.random(in: 10...30),
             processorCount: 8,
             temperature: 45.0,
             loadAverage: (1.2, 1.5, 1.8),
@@ -141,7 +139,7 @@ class SystemMetricsProvider: ObservableObject {
         let mem = MemoryMetrics(
             timestamp: Date(),
             total: 16000000000,
-            used: 8000000000,
+            used: UInt64.random(in: 6000000000...10000000000),
             free: 8000000000,
             active: 4000000000,
             inactive: 2000000000,
